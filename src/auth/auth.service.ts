@@ -373,7 +373,33 @@ async register(userData: any) {
     return { message: 'Email verified successfully' }
   }
 
-  async generateApiKey(currentUser: User) {
+  async generateApiKeyByUserId(userId: string) {
+    const user = await this.usersService.findOne({ _id: userId })
+    if (!user) {
+      throw new HttpException(
+        { error: 'User not found' },
+        HttpStatus.NOT_FOUND,
+      )
+    }
+    return this.generateApiKey(user)
+  }
+
+  async generateApiKey(currentUser: any) {
+    const apiKey = uuidv4()
+    const hashedApiKey = await bcrypt.hash(apiKey, 10)
+
+    const newApiKey = new this.apiKeyModel({
+      apiKey: apiKey.substr(0, 17) + '*'.repeat(18),
+      hashedApiKey,
+      user: currentUser._id, 
+    })
+
+    await newApiKey.save()
+
+    return { apiKey, message: 'Save this key, it wont be shown again ;)' }
+  }
+
+  async generateApiKeyx(currentUser: User) {
     const apiKey = uuidv4()
     const hashedApiKey = await bcrypt.hash(apiKey, 10)
 
