@@ -5,6 +5,7 @@ import {
   Patch,
   Headers,
   Post,
+  HttpException,
   UseGuards,
   Request,
   Get,
