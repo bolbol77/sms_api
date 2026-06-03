@@ -64,6 +64,46 @@ export class AuthService {
     }
   }
 
+async register(userData: any) {
+    if (userData.turnstileToken) {
+      await this.turnstileService.verify(userData.turnstileToken)
+    }
+
+    const existingUser = await this.usersService.findOne({
+      email: userData.email,
+    })
+    if (existingUser) {
+      throw new HttpException(
+        { error: 'User already exists, please login instead' },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    this.validateEmail(userData.email)
+    this.validatePassword(userData.password)
+
+    const hashedPassword = await bcrypt.hash(userData.password, 10)
+    const { turnstileToken, ...sanitizedUserData } = userData
+    const user = await this.usersService.create({
+      ...sanitizedUserData,
+      password: hashedPassword,
+    })
+
+    user.emailVerifiedAt = new Date() 
+    user.lastLoginAt = new Date()
+    await user.save()
+
+
+    const payload = { email: user.email, sub: user._id }
+    const { apiKey } = await this.generateApiKey(user)
+
+    return {
+      accessToken: this.jwtService.sign(payload),
+      apiKey,
+      user,
+    }
+  }
+  
   async loginWithGoogle(idToken: string) {
     const response = await axios.get(
       `https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`,
@@ -105,7 +145,7 @@ export class AuthService {
     }
   }
 
-  async register(userData: any) {
+  async registerx(userData: any) {
     await this.turnstileService.verify(userData.turnstileToken)
 
     const existingUser = await this.usersService.findOne({
