@@ -177,6 +177,20 @@ export class GatewayController {
     return { data };
   }
 
+
+
+
+@ApiOperation({ summary: 'Get device IDs by API key' })
+@UseGuards(AuthGuard)
+@Get('/devices/by-api-key')
+async getDeviceIdsByApiKey(@Request() req) {
+  // Get all devices for the authenticated user
+  const devices = await this.gatewayService.getDevicesForUser(req.user);
+  // Extract only the device IDs (or return full device objects)
+  const deviceIds = devices.map(device => device._id.toString());
+  return { data: deviceIds };
+}
+  
   @ApiOperation({ summary: 'Get a single SMS by ID' })
   @UseGuards(AuthGuard, CanModifyDevice)
   @Get('/devices/:id/sms/:smsId')
