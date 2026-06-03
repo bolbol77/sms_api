@@ -39,6 +39,29 @@ export class GatewayService {
     private smsQueueService: SmsQueueService,
   ) {}
 
+
+  async getDevicesByApiKey(apiKey: string): Promise<any> {
+  // 1. Find the user associated with this API key via AuthService
+  // Note: You will need to implement 'findUserByApiKey' in your AuthService if it doesn't exist.
+  const user = await this.authService.findUserByApiKey(apiKey);
+
+  if (!user) {
+    throw new HttpException(
+      {
+        success: false,
+        error: 'Invalid API key',
+      },
+      HttpStatus.UNAUTHORIZED,
+    );
+  }
+
+  // 2. Find all devices linked to this user
+  const devices = await this.deviceModel
+    .find({ user: user._id }, '_id name brand model enabled')
+    .lean();
+
+  return devices;
+}
   async registerDevice(
     input: RegisterDeviceInputDTO,
     user: User,
