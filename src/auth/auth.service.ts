@@ -64,6 +64,15 @@ export class AuthService {
     }
   }
 
+  async findUserByApiKey(apiKey: string): Promise<any> {
+  // Find the API key record and populate the attached user document
+  const keyRecord = await this.apiKeyModel
+    .findOne({ key: apiKey }) // Adjust 'key' to matching property name (e.g., token, value)
+    .populate('user');
+    
+  return keyRecord ? keyRecord.user : null;
+}
+
 async register(userData: any) {
    
 
