@@ -63,7 +63,7 @@ export class GatewayController {
     return { data }
   }
 
-  @ApiOperation({ summary: 'Get device IDs by API Key' })
+@ApiOperation({ summary: 'Get device IDs by API Key' })
   @Get('/lookup-by-key')
   async getDevicesByKey(@Headers('x-api-key') apiKey: string) {
     if (!apiKey) {
