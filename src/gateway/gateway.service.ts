@@ -39,14 +39,7 @@ export class GatewayService {
     private smsQueueService: SmsQueueService,
   ) {}
 
-async findUserByApiKey(apiKey: string): Promise<any> {
-  // Find the API key record and populate the attached user document
-  const keyRecord = await this.apiKeyModel
-    .findOne({ key: apiKey }) // Adjust 'key' to matching property name (e.g., token, value)
-    .populate('user');
-    
-  return keyRecord ? keyRecord.user : null;
-}
+
   async getDevicesByApiKey(apiKey: string): Promise<any> {
   // 1. Find the user associated with this API key via AuthService
   // Note: You will need to implement 'findUserByApiKey' in your AuthService if it doesn't exist.
