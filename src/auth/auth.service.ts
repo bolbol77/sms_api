@@ -37,7 +37,9 @@ export class AuthService {
   ) {}
 
   async login(userData: any) {
-    await this.turnstileService.verify(userData.turnstileToken)
+    if (userData.turnstileToken) {
+      await this.turnstileService.verify(userData.turnstileToken)
+    }
 
     const user = await this.usersService.findOne({ email: userData.email })
     if (!user) {
