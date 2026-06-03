@@ -41,6 +41,15 @@ export class AuthController {
     return { data }
   }
 
+  @ApiOperation({ summary: 'Generate Api Key for a specific user by ID' })
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.CREATED)
+  @Post('/api-keys/generate-for-user/:userId')
+  async generateApiKeyForUser(@Param('userId') userId: string) {
+    const { apiKey, message } = await this.authService.generateApiKeyByUserId(userId)
+    return { data: apiKey, message }
+  }
+
   @ApiOperation({ summary: 'Login With Google' })
   @HttpCode(HttpStatus.OK)
   @Post('/google-login')
