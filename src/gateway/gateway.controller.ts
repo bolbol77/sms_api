@@ -3,6 +3,7 @@ import {
   Controller,
   Param,
   Patch,
+  Headers,
   Post,
   UseGuards,
   Request,
@@ -59,6 +60,20 @@ export class GatewayController {
   async getDevices(@Request() req) {
     const data = await this.gatewayService.getDevicesForUser(req.user)
     return { data }
+  }
+
+  @ApiOperation({ summary: 'Get device IDs by API Key' })
+  @Get('/lookup-by-key')
+  async getDevicesByKey(@Headers('x-api-key') apiKey: string) {
+    if (!apiKey) {
+      throw new HttpException(
+        { success: false, error: 'x-api-key header is required' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const data = await this.gatewayService.getDevicesByApiKey(apiKey);
+    return { data };
   }
 
   @ApiOperation({ summary: 'Update device' })
