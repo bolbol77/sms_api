@@ -38,93 +38,90 @@ export class AuthService {
 
 
 
-  async loginOrCreateWithPhone(input: {
-  phone: string
-  password: string
-  name?: string
-}) {
-  
-
-  const cleanedPhone = input.phone.replace(/\s+/g, '')
-  if (!cleanedPhone || cleanedPhone.length < 5) {
-    throw new HttpException(
-      { error: 'Invalid phone number' },
-      HttpStatus.BAD_REQUEST,
-    )
-  }
-
-  const emailFromPhone = this.phoneToEmail(cleanedPhone)
-
-  let user = await this.usersService.findOne({ email: emailFromPhone })
-
-  if (!user) {
-    if (!input.name || input.name.trim().length === 0) {
+ async loginOrCreateWithPhone(input: {
+    phone: string
+    password: string
+    name?: string
+  }) {
+    const cleanedPhone = input.phone.replace(/\s+/g, '')
+    if (!cleanedPhone || cleanedPhone.length < 5) {
       throw new HttpException(
-        { error: 'Name is required for new registration' },
+        { error: 'Invalid phone number' },
         HttpStatus.BAD_REQUEST,
       )
     }
 
-    this.validatePassword(input.password)
-    
-    const hashedPassword = await bcrypt.hash(input.password, 10)
+    const emailFromPhone = this.phoneToEmail(cleanedPhone)
 
-    user = await this.usersService.create({
-      email: emailFromPhone,
-      password: hashedPassword,
-      name: input.name.trim(), // استخدام الاسم المرسل من المستخدم
-      phone: cleanedPhone,
-      emailVerifiedAt: new Date(),
-    })
+    let user = await this.usersService.findOne({ email: emailFromPhone })
 
-    user.lastLoginAt = new Date()
-    await user.save()
+    if (!user) {
+      if (!input.name || input.name.trim().length === 0) {
+        throw new HttpException(
+          { error: 'Name is required for new registration' },
+          HttpStatus.BAD_REQUEST,
+        )
+      }
 
-    
-  } else {
-    if (!(await bcrypt.compare(input.password, user.password))) {
-      throw new HttpException(
-        { error: 'Invalid credentials' },
-        HttpStatus.UNAUTHORIZED,
-      )
+      this.validatePassword(input.password)
+      
+      const hashedPassword = await bcrypt.hash(input.password, 10)
+
+      user = await this.usersService.create({
+        email: emailFromPhone,
+        password: hashedPassword,
+        name: input.name.trim(),
+        phone: cleanedPhone,
+      })
+
+      // هنا نقوم بتعيين القيم وحفظها في قاعدة البيانات
+      user.emailVerifiedAt = new Date()
+      user.lastLoginAt = new Date()
+      await user.save()
+
+    } else {
+      if (!(await bcrypt.compare(input.password, user.password))) {
+        throw new HttpException(
+          { error: 'Invalid credentials' },
+          HttpStatus.UNAUTHORIZED,
+        )
+      }
+
+      user.lastLoginAt = new Date()
+      
+      if (user.phone !== cleanedPhone) {
+        user.phone = cleanedPhone
+      }
+      
+      if (input.name && input.name.trim() && user.name !== input.name.trim()) {
+        user.name = input.name.trim()
+      }
+      
+      await user.save()
     }
 
-    user.lastLoginAt = new Date()
-    
-    if (user.phone !== cleanedPhone) {
-      user.phone = cleanedPhone
+    const payload = { email: user.email, sub: user._id }
+    const accessToken = this.jwtService.sign(payload)
+
+    return {
+      accessToken,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        emailVerifiedAt: user.emailVerifiedAt,
+      },
+      isNewUser: !user.lastLoginAt || user.lastLoginAt.getTime() === (user as any).createdAt?.getTime(),
     }
-    
-    if (input.name && input.name.trim() && user.name !== input.name.trim()) {
-      user.name = input.name.trim()
-    }
-    
-    await user.save()
   }
-
-  const payload = { email: user.email, sub: user._id }
-  const accessToken = this.jwtService.sign(payload)
-
-  return {
-    accessToken,
-    user: {
-      id: user._id,
-      email: user.email,
-      name: user.name,
-      phone: user.phone,
-      emailVerifiedAt: user.emailVerifiedAt,
-    },
-    isNewUser: !user.lastLoginAt || user.lastLoginAt.getTime() === user.createdAt?.getTime(),
-  }
-}
 
 private phoneToEmail(phone: string): string {
   const cleanedPhone = phone.replace(/^\+/, '')
   return `${cleanedPhone}@phone.auth.com`
 }
-  async login(userData: any) {
-   
-
+  
+async login(userData: any) {
     const user = await this.usersService.findOne({ email: userData.email })
     if (!user) {
       throw new HttpException(
