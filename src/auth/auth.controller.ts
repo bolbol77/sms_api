@@ -18,6 +18,7 @@ import {
   RegisterInputDTO,
   RequestResetPasswordInputDTO,
   ResetPasswordInputDTO,
+  LoginOrRegisterWithPhoneInputDTO,
   UpdateOnboardingDTO,
 } from './auth.dto'
 import { AuthGuard } from './guards/auth.guard'
@@ -33,6 +34,16 @@ export class AuthController {
     private usersService: UsersService,
   ) {}
 
+
+  @ApiOperation({ 
+  summary: 'Login or create account using phone number + password' 
+})
+@HttpCode(HttpStatus.OK)
+@Post('/phoneLogin')
+async loginOrRegisterWithPhone(@Body() input: LoginOrRegisterWithPhoneInputDTO) {
+  const data = await this.authService.loginOrCreateWithPhone(input)
+  return { data }
+}
   @ApiOperation({ summary: 'Login' })
   @HttpCode(HttpStatus.OK)
   @Post('/login')
