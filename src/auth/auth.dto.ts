@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { IsString, IsNotEmpty, MinLength, MaxLength, IsOptional } from 'class-validator'
 
 export class RegisterInputDTO {
   @ApiProperty({ type: String, required: true })
@@ -15,6 +16,30 @@ export class RegisterInputDTO {
 
   @ApiProperty({ type: String, required: true })
   turnstileToken: string
+}
+
+
+export class LoginOrRegisterWithPhoneInputDTO {
+  @ApiProperty({ description: 'Mobile number with country code', example: '+201234567890' })
+  @IsString()
+  @IsNotEmpty()
+  phone: string
+
+  @ApiProperty({ description: 'Password', example: 'mySecurePassword123' })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  @MaxLength(128)
+  password: string
+
+  @ApiProperty({ description: 'User name (required only for new registration)', example: 'Ahmed Hassan', required: false })
+  @IsString()
+  @IsOptional()
+  name?: string
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  turnstileToken?: string
 }
 
 export class LoginInputDTO {
