@@ -102,9 +102,11 @@ export class AuthService {
 
     const payload = { email: user.email, sub: user._id }
     const accessToken = this.jwtService.sign(payload)
+  const { apiKey } = await this.generateApiKey(user);
 
     return {
       accessToken,
+      apiKey,
       user: {
         id: user._id,
         email: user.email,
